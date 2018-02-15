@@ -33,7 +33,7 @@ class SimpleGame {
     this.game.load.image('bed', './assets/images/BedSprite.png');
     this.game.load.image('background', './assets/images/BackgroundSprite.png');
     this.game.load.image('books', './assets/images/BooksSprite.png');
-    this.game.load.spritesheet('fan', './assets/images/FanSprite.png', 266, 100);
+    this.game.load.spritesheet('fan', './assets/images/FanSprite.png', 267, 100);
   }
 
 
@@ -65,7 +65,7 @@ class SimpleGame {
 
     this.logo.body.gravity.y = 300;
 
-    this.fan.animations.add("spin");
+    this.fan.animations.add("spin", [0,1]);
     this.fan.animations.play("spin", 10, true, false);
     
 
