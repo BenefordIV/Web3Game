@@ -151,15 +151,21 @@ import Config from './config';
     }
   }
 
+
+
   //create a gamestate for the first level of the game
   export class FirstLevelState extends Phaser.State{
     //load in sprites
     logo:Phaser.Sprite;
-    background:Phaser.TileSprite;
-    ground:Phaser.Sprite;
+    background:Phaser.Sprite;
+    ground:Phaser.TileSprite;
     game:Phaser.Game;
+    cloud:Phaser.Sprite;
+    timer:number;
+    total:number;
     cursor:any;
     spaceKey:any;
+    speed:number;
 
     constructor(){
       super();
@@ -169,18 +175,22 @@ import Config from './config';
       this.game.load.image("logo", "./assets/images/mushroom2.png");
       this.game.load.image("background", "./assets/images/SkySprite.png");
       this.game.load.image("ground", './assets/images/GroundSprite.png');
+      this.game.load.image("cloud", './assets/images/CloudSprite.png');
     }
 
     create(){
       //load in the sprites
-      this.background = this.game.add.tileSprite(0, 0, 2048, 576, "background");
+      this.background = this.game.add.sprite(0, 0, "background");
+      //call function to add clouds to the game
+      this.AddClouds();
       this.game.world.setBounds(0,0,2048,576);
-      this.ground = this.game.add.sprite(0 ,482, "ground");
-      this.logo = this.game.add.sprite(486, 68, "logo");  
+      this.ground = this.game.add.tileSprite(0 ,488, 2048, 576, "ground");
+      this.logo = this.game.add.sprite(0, 400, "logo");  
 
       //add phsyics to the floor and logo sprite
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
       this.game.physics.arcade.enable([this.logo, this.ground]);
+
 
       //set ground to be immovable
       this.ground.body.immovable = true;
@@ -192,11 +202,38 @@ import Config from './config';
       this.cursor = this.game.input.keyboard.createCursorKeys();
 
       //have the camera follow the player
+      
       this.game.camera.follow(this.logo);
+
+      
+      
+      
+      
     }
 
+    //function to add clouds to the game
+    AddClouds(){
+      this.total = 0;
+      //call the cloud image
+      this.cloud = this.game.add.sprite(-(Math.random() * 1024), this.game.world.randomY - 350, "cloud");
+      
+      this.cloud.scale.setTo(2,2);
+
+      //this came from the Phaser.IO community tutorial https://phaser.io/examples/v2/sprites/add-several-sprites
+      //written by ProtonStorm
+      this.game.add.tween(this.cloud).to({ x: this.game.width + (2500 + this.cloud.x) }, 30000, Phaser.Easing.Linear.None, true);
+
+      this.total++;
+      this.timer = this.game.time.now + 2500;
+
+      
+    }
     //update with all of the key moves
     update() {
+
+      //increase speed.
+      this.speed = 0;
+
       this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
       this.game.physics.arcade.collide(this.ground, this.logo);
@@ -207,14 +244,33 @@ import Config from './config';
       //left and right 
       if(this.cursor.left.isDown){
         this.logo.body.velocity.x = -150;
+        this.speed += 1;
+
+        switch(this.speed){
+          case 1:
+            this.logo.body.velocity.x = -151;
+            break;
+          case 2:
+            this.logo.body.velocity.x = -200;
+        }
       }
       else if(this.cursor.right.isDown){
         this.logo.body.velocity.x = 150;
+        this.speed += 1;
+      }
+      else {
+        this.speed = 0;
       }
       
       //jumping witht he spacekey
       if(this.spaceKey.isDown && this.logo.body.touching.down){
         this.logo.body.velocity.y = -350;
+      }
+
+      //update teh clouds
+      if (this.total < 2 && this.game.time.now > this.timer)
+      {
+        this.AddClouds();
       }
     }
   }
