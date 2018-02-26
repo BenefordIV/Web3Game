@@ -9,6 +9,10 @@ import Config from './config';
 //create a module for all classes to sit in
 
 
+//the idea of using states came from the typescript tutorials from 
+//http://www.gamefromscratch.com/post/2014/05/29/Adventures-in-Phaser-with-TypeScript-Where-did-my-game-loop-go.aspx
+
+
   //create a game state that will load first
   export class TitleScreenState extends Phaser.State{
     game: Phaser.Game;
@@ -143,6 +147,9 @@ import Config from './config';
       
     }
   }
+  //the check overlap method comes from https://phaser.io/examples/v2/sprites/overlap-tween-without-physics
+  //I know Phaser has an overlap method to check the bounds of two objects but that requires me to add in a bunch of extra 
+  //physics based coding.
     checkOverlap(spriteA, spriteB){
       let centerX = spriteA.getBounds();
       let boundsB = spriteB.getBounds();
@@ -165,7 +172,6 @@ import Config from './config';
     total:number;
     cursor:any;
     spaceKey:any;
-    speed:number;
 
     constructor(){
       super();
