@@ -29,10 +29,10 @@ import Config from './config';
     //create method that will generate the sprite sheet along with run the sprites
     create(){
       //generate sprite with x, y, and key
-      this.TitleScreen = this.add.sprite(0,0,'title');
+      this.TitleScreen = this.add.sprite(0,0,'title', [0]);
 
       //generate the animation for 
-      this.TitleScreen.animations.add('blink', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
+      this.TitleScreen.animations.add('blink', [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
       this.TitleScreen.animations.play('blink', 10, true, false);
 
       //create the click that will point to another state
@@ -57,6 +57,7 @@ import Config from './config';
     books:Phaser.Sprite;
     fan:Phaser.Sprite;
     logo2:Phaser.Sprite;
+    spaceKey:any;
   
     //constructor method
     constructor() {
@@ -108,14 +109,113 @@ import Config from './config';
       this.fan.animations.add("spin", [0,1]);
       this.fan.animations.play("spin", 10, true, false);
       
-  
+      
+      this.cursors = this.game.input.keyboard.createCursorKeys();
   
   
     }
   //just to chceck and upadate the placeholder sprite to collide with the floor
     update() {
+      this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
       this.game.physics.arcade.collide(this.floor, this.logo);
+
+      //stop the player when not moving
+      this.logo.body.velocity.x = 0;
+
+      //left and right 
+      if(this.cursors.left.isDown){
+        this.logo.body.velocity.x = -150;
+      }
+      else if(this.cursors.right.isDown){
+        this.logo.body.velocity.x = 150;
+      }
       
+      //jumping witht he spacekey
+      if(this.spaceKey.isDown && this.logo.body.touching.down){
+        this.logo.body.velocity.y = -350;
+      }
+
+      if(this.cursors.up.isDown){
+        if(this.checkOverlap(this.logo, this.door)){
+          this.game.state.start("FirstLevelState");
+        }
+      
+    }
+  }
+    checkOverlap(spriteA, spriteB){
+      let centerX = spriteA.getBounds();
+      let boundsB = spriteB.getBounds();
+
+      return Phaser.Rectangle.intersects(centerX, boundsB);
+    }
+  }
+
+  //create a gamestate for the first level of the game
+  export class FirstLevelState extends Phaser.State{
+    //load in sprites
+    logo:Phaser.Sprite;
+    background:Phaser.TileSprite;
+    ground:Phaser.Sprite;
+    game:Phaser.Game;
+    cursor:any;
+    spaceKey:any;
+
+    constructor(){
+      super();
+    }
+    //preload method that adds all of the sprites
+    preload(){
+      this.game.load.image("logo", "./assets/images/mushroom2.png");
+      this.game.load.image("background", "./assets/images/SkySprite.png");
+      this.game.load.image("ground", './assets/images/GroundSprite.png');
+    }
+
+    create(){
+      //load in the sprites
+      this.background = this.game.add.tileSprite(0, 0, 2048, 576, "background");
+      this.game.world.setBounds(0,0,2048,576);
+      this.ground = this.game.add.sprite(0 ,482, "ground");
+      this.logo = this.game.add.sprite(486, 68, "logo");  
+
+      //add phsyics to the floor and logo sprite
+      this.game.physics.startSystem(Phaser.Physics.ARCADE);
+      this.game.physics.arcade.enable([this.logo, this.ground]);
+
+      //set ground to be immovable
+      this.ground.body.immovable = true;
+
+      //set gravity of logo
+      this.logo.body.gravity.y = 300;
+      
+
+      this.cursor = this.game.input.keyboard.createCursorKeys();
+
+      //have the camera follow the player
+      this.game.camera.follow(this.logo);
+    }
+
+    //update with all of the key moves
+    update() {
+      this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+      this.game.physics.arcade.collide(this.ground, this.logo);
+
+      //stop the player when not moving
+      this.logo.body.velocity.x = 0;
+
+      //left and right 
+      if(this.cursor.left.isDown){
+        this.logo.body.velocity.x = -150;
+      }
+      else if(this.cursor.right.isDown){
+        this.logo.body.velocity.x = 150;
+      }
+      
+      //jumping witht he spacekey
+      if(this.spaceKey.isDown && this.logo.body.touching.down){
+        this.logo.body.velocity.y = -350;
+      }
     }
   }
 
@@ -127,6 +227,7 @@ import Config from './config';
       this.game = new Phaser.Game(1024 , 576, Phaser.AUTO, "content");
 
       //add the gamestates that were first made
+      this.game.state.add("FirstLevelState", FirstLevelState, false);
       this.game.state.add("BedroomRunningState", BedroomRunningState, false);
       this.game.state.add("TitleScreenState", TitleScreenState, false);
       this.game.state.start("TitleScreenState", true, true);
