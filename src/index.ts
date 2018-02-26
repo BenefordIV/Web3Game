@@ -252,10 +252,10 @@ import Config from './config';
       }
       else if(this.cursor.right.isDown){
         this.logo.body.velocity.x = 150;
-        this.speed += 1;
+        
       }
       else {
-        this.speed = 0;
+        
       }
       
       //jumping witht he spacekey
