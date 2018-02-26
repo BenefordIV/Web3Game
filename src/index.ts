@@ -190,7 +190,8 @@ import Config from './config';
       //add phsyics to the floor and logo sprite
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
       this.game.physics.arcade.enable([this.logo, this.ground]);
-
+      //bound character to the world
+      this.logo.body.collideWorldBounds = true;
 
       //set ground to be immovable
       this.ground.body.immovable = true;
@@ -231,9 +232,6 @@ import Config from './config';
     //update with all of the key moves
     update() {
 
-      //increase speed.
-      this.speed = 0;
-
       this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
       this.game.physics.arcade.collide(this.ground, this.logo);
@@ -244,15 +242,7 @@ import Config from './config';
       //left and right 
       if(this.cursor.left.isDown){
         this.logo.body.velocity.x = -150;
-        this.speed += 1;
-
-        switch(this.speed){
-          case 1:
-            this.logo.body.velocity.x = -151;
-            break;
-          case 2:
-            this.logo.body.velocity.x = -200;
-        }
+       
       }
       else if(this.cursor.right.isDown){
         this.logo.body.velocity.x = 150;
