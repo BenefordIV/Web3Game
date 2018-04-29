@@ -454,7 +454,6 @@ import Config from './config';
           this.enemy = this.game.add.sprite(1024, this.game.world.randomY + 10, "enemy");
           
          
-    
           //this came from the Phaser.IO community tutorial https://phaser.io/examples/v2/sprites/add-several-sprites
           //written by ProtonStorm
           this.game.add.tween(this.enemy).to({ x: this.game.width + (-2500 + this.enemy.x) }, 30000, Phaser.Easing.Linear.None, true);
