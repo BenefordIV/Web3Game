@@ -93,9 +93,10 @@ import Config from './config';
       this.floor = this.game.add.sprite(0, 765, "floor");
       this.logo = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, "logo");
       
+      
       this.fan.scale.setTo(1, 1);
       
-  
+      this.logo.scale.setTo(0.5, 0.5);
   
       //apply physics
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -196,8 +197,8 @@ import Config from './config';
       this.game.world.setBounds(0,0,2048,576);
       this.ground = this.game.add.tileSprite(0 ,488, 2048, 576, "ground");
       this.spaceCraft = this.game.add.sprite(1700, 400, "spaceCraft");
-      this.logo = this.game.add.sprite(0, 400, "logo");
-      
+      this.logo = this.game.add.sprite(0, 360, "logo");
+      this.logo.scale.set(0.5, 0.5);
 
       //add phsyics to the floor and logo sprite
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -215,10 +216,10 @@ import Config from './config';
 
       //have the camera follow the player
       
-      this.game.camera.follow(this.logo);
+     this.game.camera.follow(this.logo);
       
       
-      this.text = this.game.add.text(16, 16, "false", {fill: '#ffffff'});
+     // this.text = this.game.add.text(16, 16, "false", {fill: '#ffffff'});
       
       
     }
@@ -274,12 +275,7 @@ import Config from './config';
         this.AddClouds();
       }
 
-      if(this.checkOverlap(this.logo, this.spaceCraft)){
-        this.text.text = "true";
-      }
-      else{
-        this.text.text = "false";
-      }
+    
       //check
 
       if(this.cursor.up.isDown){
@@ -324,6 +320,8 @@ import Config from './config';
       laserEnergy:number;
       bullets:Phaser.Group;
       lasers:Phaser.Group;
+
+      killCount = 0;
 
       //testing text
       score:any;
@@ -399,6 +397,11 @@ import Config from './config';
      
 
       //update method that runs nearly all of the game's functionality
+      //a lot of the functionality for the overlapping and grouping of units comes from the tutorials from the youtuber
+      //Magic Monk. In his tutorials he went over how to check for overlapping with a group and this will allow the game to check every milisecond
+      //for an initial overlap as opposed to how I was doing it before with every frame (.16s). The bullet firing also came from his guide
+      //https://www.youtube.com/watch?v=MMnr_q-tWIg
+      //
       update() {
         this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         this.boostKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
@@ -413,9 +416,16 @@ import Config from './config';
         }
 
         if(this.game.physics.arcade.overlap(this.enemySpawn, this.bullets, this.blowUpEnemyAndBullet)){
-         this.scoreIncrease += 10;
+         this.scoreIncrease += Math.floor(Math.random() * 100);
+         this.killCount++;
          this.score.text = "Score: " + this.scoreIncrease; 
-         if(this.scoreIncrease == 100){
+         if(this.killCount > 11){
+           this.bulletRate = 100;
+           this.spawnRate = 1000;
+         }
+
+
+         if(this.killCount >= 20){
            this.game.state.start("ThirdLevelState");
          }
           
@@ -478,11 +488,13 @@ import Config from './config';
 
         }
         
+        if(this.killCount <= 10){
+          this.enemy.body.velocity.x = -80;  
+        }
+        else{
+          this.enemy.body.velocity.x = -120;
+        }
         
-        this.enemy.body.velocity.x = -50;
-
-
-        console.log(this.scoreIncrease);
 
         }
       }
@@ -527,7 +539,7 @@ import Config from './config';
 
 
   export class ThirdLevelState extends Phaser.State{
-    //variables for second level
+    //variables for third level
       enemy:Phaser.Sprite;
       background:Phaser.TileSprite;
       spaceCraft:Phaser.Sprite;
@@ -538,8 +550,8 @@ import Config from './config';
       cursor:any;
       spaceKey:any;
       boostKey:any;
-      laserKey:any;
-      timer:any;
+      
+      
 
       //anything that has to deal with the bullets and the laser comes from the tutorial of phaser.io/examples/v2/input/keyboard-justpressed
       bulletRate = 500;
@@ -552,11 +564,10 @@ import Config from './config';
       //testing text
       score:any;
       enemySpawn:Phaser.Group;
+     
+      //counters for the game that are used
       scoreIncrease = 0;
-
-      //fixed position for enemy
-      enemyX:number;
-      enemyY:number;
+      killCount = 0;
       
 
       constructor(){
@@ -622,93 +633,110 @@ import Config from './config';
       //add enemies method that will copy the clouds method from above
      
 
-      //update method that runs nearly all of the game's functionality
-      update() {
-        this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-        this.boostKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
+     //update method that runs nearly all of the game's functionality
+     update() {
+      this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+      this.boostKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
+     
+
+      
+      
+      //check collision
+      if(this.game.physics.arcade.overlap(this.enemySpawn, this.spaceCraft)){
+        this.spaceCraft.kill();
+        this.game.state.start("GameOverState");
+      }
+
+      if(this.game.physics.arcade.overlap(this.enemySpawn, this.bullets, this.blowUpEnemyAndBullet)){
+       this.scoreIncrease += Math.floor(Math.random() * 100);
+       this.killCount++;
+       this.score.text = "Score: " + this.scoreIncrease; 
+       if(this.killCount > 11){
+         this.bulletRate = 100;
+         this.spawnRate = 1000;
+       }
+      else if(this.killCount > 21){
+         this.bulletRate = 110;
+         this.spawnRate = 800;
+       }
+      else if(this.killCount > 31){
+        this.spawnRate = 500;
+      }
+
+
+       if(this.killCount >= 50){
+         this.game.state.start("ThankYouState");
+       }
+        
+      }
+        
+      
        
-
-        
-        
-        //check collision
-        if(this.game.physics.arcade.overlap(this.enemySpawn, this.spaceCraft)){
-          this.spaceCraft.kill();
-          this.game.state.start("GameOverState");
-        }
-
-        if(this.game.physics.arcade.overlap(this.enemySpawn, this.bullets, this.blowUpEnemyAndBullet)){
-         this.scoreIncrease += 10;
-         this.score.text = "Score: " + this.scoreIncrease; 
-         if(this.scoreIncrease == 100){
-           this.game.state.start("ThankYouState");
-         }
-          
-        }
-          
-        
-         
-        
-        //key bindings
-        //firing the bullets/laser
-        if(this.spaceKey.isDown){
-          this.fireBullets();
-        }
+      
+      //key bindings
+      //firing the bullets/laser
+      if(this.spaceKey.isDown){
+        this.fireBullets();
+      }
 
 
 
 //go up
-        if(this.cursor.up.isDown){
-          this.spaceCraft.body.velocity.y = -100;
-          if(this.boostKey.isDown){
-            this.spaceCraft.body.velocity.y = -150;
-          }
-          //this.spaceCraft.angle = 345;
+      if(this.cursor.up.isDown){
+        this.spaceCraft.body.velocity.y = -100;
+        if(this.boostKey.isDown){
+          this.spaceCraft.body.velocity.y = -150;
         }
-        else if (this.cursor.down.isDown){
-          this.spaceCraft.body.velocity.y = 100;
-          if(this.boostKey.isDown){
-            this.spaceCraft.body.velocity.y = 150;
-          }
-          //this.spaceCraft.angle = 15;
+        //this.spaceCraft.angle = 345;
+      }
+      else if (this.cursor.down.isDown){
+        this.spaceCraft.body.velocity.y = 100;
+        if(this.boostKey.isDown){
+          this.spaceCraft.body.velocity.y = 150;
         }
-      
-        else{
-          this.spaceCraft.body.velocity.y = 0;
-          this.spaceCraft.angle = 0;
-        }
-
-        if(this.cursor.left.isDown){
-          this.spaceCraft.body.velocity.x = -100;
-          if(this.boostKey.isDown){
-            this.spaceCraft.body.velocity.x = -150;
-          }
-        }
-        else if(this.cursor.right.isDown){
-          this.spaceCraft.body.velocity.x = 100;
-          if(this.boostKey.isDown){
-            this.spaceCraft.body.velocity.x = 150;
-          }
-        }
-        else{
-          this.spaceCraft.body.velocity.x = 0;
+        //this.spaceCraft.angle = 15;
+      }
     
+      else{
+        this.spaceCraft.body.velocity.y = 0;
+        this.spaceCraft.angle = 0;
+      }
 
-          
-        //add blowup method
-        if(this.game.time.now > this.spawnTime){
-          this.spawnTime = this.game.time.now + this.spawnRate;
-          this.addEnemies();
-          
-
-        }
-        
-        
-        this.enemy.body.velocity.x = -80;
-
-
-        
+      if(this.cursor.left.isDown){
+        this.spaceCraft.body.velocity.x = -100;
+        if(this.boostKey.isDown){
+          this.spaceCraft.body.velocity.x = -150;
         }
       }
+      else if(this.cursor.right.isDown){
+        this.spaceCraft.body.velocity.x = 100;
+        if(this.boostKey.isDown){
+          this.spaceCraft.body.velocity.x = 150;
+        }
+      }
+      else{
+        this.spaceCraft.body.velocity.x = 0;
+  
+
+        
+      //add blowup method
+      if(this.game.time.now > this.spawnTime){
+        this.spawnTime = this.game.time.now + this.spawnRate;
+        this.addEnemies();
+        
+
+      }
+      
+      if(this.killCount <= 10){
+        this.enemy.body.velocity.x = -80;  
+      }
+      else{
+        this.enemy.body.velocity.x = -120;
+      }
+      
+
+      }
+    }
 
       addEnemies(){
         
@@ -738,8 +766,8 @@ import Config from './config';
       }
 
 
+      //used for checking collsion of bullet and enemy ship
     blowUpEnemyAndBullet(a, b)   {
-
         a.kill();
        b.kill();
       }
@@ -862,7 +890,7 @@ import Config from './config';
       this.game.state.add("ThirdLevelState", ThirdLevelState, false);
       this.game.state.add("ThankYouState", ThankYouState, false);
       this.game.state.add("GameOverState", GameOverState, false);
-      this.game.state.start("ThankYouState", true, true);
+      this.game.state.start("SecondLevelState", true, true);
     }
    
 }
